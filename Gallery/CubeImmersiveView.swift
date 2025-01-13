@@ -15,20 +15,42 @@ struct CubeImmersiveView: View {
     var body: some View {
         RealityView { content in
             let anchor = AnchorEntity()
-            if let cube = try? await ModelEntity(named: "Adidas") {
-                let numberOfCubes = 8
-                for index in 0..<numberOfCubes {
-                    let angle = Float(index) * (2 * .pi / Float(numberOfCubes))
+
+            // Cargar los modelos
+            //async {
+                // Cargar el modelo de la bota
+                guard let boot = try? await ModelEntity(named: "Adidas") else {
+                    print("Error al cargar el modelo 'Adidas'")
+                    return
+                }
+                
+                // Cargar el modelo del cubo
+                guard let cube = try? await ModelEntity(named: "Cube") else {
+                    print("Error al cargar el modelo 'cube'")
+                    return
+                }
+                
+                let numberOfEntities = 8 // Número total de entidades
+                for index in 0..<numberOfEntities {
+                    let angle = Float(index) * (2 * .pi / Float(numberOfEntities)) // Calcular el ángulo
                     let xPosition = cos(angle)
                     let zPosition = sin(angle)
-                    let cubeEntity = cube.clone(recursive: false)
-                        cubeEntity.position = [xPosition, 1.5, zPosition]
-                        cubeEntity.generateCollisionShapes(recursive: false)
-                        cubeEntity.components.set(InputTargetComponent())
-                               anchor.addChild(cubeEntity)
+
+                    // Elegir el modelo según el índice
+                    let entity = (index % 2 == 0) ? boot.clone(recursive: false) : cube.clone(recursive: false)
+                    
+                    // Configurar la posición y colisiones
+                    entity.position = [xPosition, 1.5, zPosition]
+                    entity.generateCollisionShapes(recursive: false)
+                    entity.components.set(InputTargetComponent())
+
+                    // Agregar la entidad al ancla
+                    anchor.addChild(entity)
                 }
-            }
-            content.add(anchor)
+                
+                // Agregar el ancla al contenido
+                content.add(anchor)
+           // }
         }
         update: { content in
             if let anchor = content.entities.first {
